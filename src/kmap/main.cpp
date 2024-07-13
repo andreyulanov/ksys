@@ -27,8 +27,7 @@
 #ifdef BUILD_WITH_XMPP
   #include "kmucroombackend.h"
   #include "kxmppclient.h"
-  #include "kloginwidget.h"
-  #include "krosterwidget.h"
+//  #include "krosterwidget.h"
   #include <kportableobjectsender.h>
   #include <QXmppQt5/QXmppClient.h>
   #include <QXmppQt5/QXmppLogger.h>
@@ -348,7 +347,7 @@ int main(int argc, char* argv[])
   QString bobPassword   = "very-secure-password-for-knav-bob";
   // QString jidResource	 	= String("QXmpp");
   QString jidResource = "flowerpot";
-  QString proxy       = "proxy.macaw.me";
+  QString proxy       = "proxy.macaw.me"; // FIXME: find proxy with discovery manager
 
   KXmppClient client(storage_man.objectsPath(), proxy); client.logger()->setLogFilePath(storage_man.logsPath() +
                                   "/client.log");
@@ -356,37 +355,6 @@ int main(int argc, char* argv[])
 
   KSettings k_settings;
 
-  KLoginWidget loginw(screen_size_pix, k_settings.jid(),
-                      k_settings.password());
-  QObject::connect(&loginw, &KLoginWidget::connectToServer, &client,
-                   qOverload<const QString&, const QString&>(
-                       &KXmppClient::reconnectToServer));
-  QObject::connect(&loginw, &KLoginWidget::connectToServer,
-                   &k_settings, &KSettings::saveAccount);
-  //  loginw.show();
-
-  KRosterWidget roster_widget(
-      client.findExtension<QXmppRosterManager>());
-  roster_widget.setFixedSize(screen_size_pix);
-  KPortableObjectSender sender;
-
-  QObject::connect(&client, &QXmppClient::disconnected,
-                   &roster_widget, &KRosterWidget::clear);
-  QObject::connect(&newobjw, &KNewObjectWidget::sendObject,
-                   &roster_widget, &KRosterWidget::show);
-  QObject::connect(&newobjw, &KNewObjectWidget::sendObject, &sender,
-                   &KPortableObjectSender::turnOnSendOnReady);
-  QObject::connect(&newobjw, &KNewObjectWidget::doNotSendObject,
-                   &sender,
-                   &KPortableObjectSender::turnOffSendOnReady);
-  QObject::connect(&client, &KXmppClient::fileDownloaded, &object_man,
-                   qOverload<QString>(&KFreeObjectManager::loadFile));
-  QObject::connect(&sender, &KPortableObjectSender::send, &client,
-                   &KXmppClient::sendFile);
-  QObject::connect(&roster_widget, &KRosterWidget::jidSelected,
-                   &sender, &KPortableObjectSender::setJid);
-  QObject::connect(&object_man, &KFreeObjectManager::saved, &sender,
-                   &KPortableObjectSender::setFilename);
   // some database stuff
   QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
   db.setDatabaseName(storage_man.databasePath());
@@ -403,13 +371,6 @@ int main(int argc, char* argv[])
       qDebug() << "Database: connection ok";
       muc_rooms_model.setDatabase(&db);
   }
-  // QObject::connect(
-  //     &muc_controller, &KMucRoomsController::addRoom,
-  //     [client_p = &client](QString room_jid)
-  //     {
-  //       qDebug() << "adding muc room" << room_jid;
-  //       client_p->findExtension<QXmppMucManager>()->addRoom(room_jid);
-  //     });
 
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
   QQuickView view(QUrl("qrc:/Main.qml"));

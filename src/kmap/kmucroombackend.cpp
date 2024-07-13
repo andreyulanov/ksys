@@ -132,10 +132,19 @@ QXmppMucRoom* KMucRoomsModel::createRoom(const QString& room_jid)
     qDebug() << "KMucRoomsModel: adding row number" << row_to_add;
     QXmppMucRoom* room = manager->addRoom(room_jid);
     rooms.append(room);
+    room->requestConfiguration();
+    connect(room, &QXmppMucRoom::allowedActionsChanged,
+            this, &KMucRoomsModel::updateRoomSlot);
+    connect(room, &QXmppMucRoom::nameChanged,
+            this, &KMucRoomsModel::updateRoomSlot);
+    connect(room, &QXmppMucRoom::nickNameChanged,
+            this, &KMucRoomsModel::updateRoomSlot);
+    connect(room, &QXmppMucRoom::subjectChanged,
+            this, &KMucRoomsModel::updateRoomSlot);
     endInsertRows();
     return room;
 }
-bool KMucRoomsModel::saveRoomToDatabase(QXmppMucRoom* room)
+bool KMucRoomsModel::insertRoomToDatabase(QXmppMucRoom* room)
 {
     if (noDatabaseMode()) return true;
     QSqlQuery query(*database);
@@ -146,16 +155,36 @@ bool KMucRoomsModel::saveRoomToDatabase(QXmppMucRoom* room)
     query.bindValue(":password", room->password()); /// FIXME: We should store passwords in more secure way...
     if (!query.exec())
     {
-        qCritical() << "Unable to save MUC room:"
+        qCritical() << "Unable to save a MUC room:"
                     << query.lastError().text();
         return false;
     }
     return true;
 }
+
+bool KMucRoomsModel::updateRoomInDatabase(QXmppMucRoom* room)
+{
+    if (noDatabaseMode()) return true;
+    QSqlQuery query(*database);
+    query.prepare("UPDATE" + table_name + "nickname = :nickname," +
+                                          "password = :password)" +
+                  "WHERE jid = :jid");
+    query.bindValue(":jid", room->jid());
+    query.bindValue(":nickname", room->nickName());
+    query.bindValue(":password", room->password());
+    if (!query.exec())
+    {
+        qCritical() << "Unable to update a MUC room:"
+                    << query.lastError().text();
+        return false;
+    }
+    return true;
+}
+
 QXmppMucRoom* KMucRoomsModel::roomAddedSlot(const QString& room_jid)
 {
     QXmppMucRoom* room = createRoom(room_jid);
-    if (!saveRoomToDatabase(room)) // clean up if failed to save
+    if (!insertRoomToDatabase(room)) // clean up if failed to save
     {
         int row = rowCount(QModelIndex()) - 1;
         beginRemoveRows(QModelIndex(), row, row);
@@ -268,4 +297,16 @@ int KMucRoomsModel::roomIndex(QXmppMucRoom* room)
         if (rooms[i] == room) return i;
     }
     return -1;
+}
+
+void KMucRoomsModel::updateRoomSlot()
+{
+    //TODO: I use QObject::sender here for simplicity, but it's a bad practice. I should improve it.
+    QXmppMucRoom* room = (QXmppMucRoom *) sender();
+    qDebug() << "Updating room" << room->jid();
+    updateRoomInDatabase(room);
+    QModelIndex indx =  index(roomIndex(room), 0);
+    //TODO: I emmit signal without vectore of changed roles.
+    // It cause all roles to be updated.
+    dataChanged(indx, indx);
 }

@@ -98,14 +98,18 @@ private:
     QXmppMucRoom* createRoom(const QString& room_jid);
     // destry a room but do not remove it from the database.
     bool destryRoom(QXmppMucRoom* room);
-    // Save room to the database.
-    bool saveRoomToDatabase(QXmppMucRoom* room);
+    // Insert a new room to the database.
+    bool insertRoomToDatabase(QXmppMucRoom* room);
+    // Update existing room in the database.
+    bool updateRoomInDatabase(QXmppMucRoom* room);
     // Remove room to the database.
     bool removeRoomFromDatabase(QXmppMucRoom* room);
 
 private slots:
-    /// Adds room to the model and the database
+    /// Adds room to the model and the database.
     QXmppMucRoom* roomAddedSlot(const QString& room_jid);
+    /// Update the room.
+    void updateRoomSlot();
 };
 
 

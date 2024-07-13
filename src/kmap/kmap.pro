@@ -57,7 +57,6 @@ HEADERS += \
  ktrackmanager.h
 
 !android: SOURCES += \
-kloginwidget.cpp \
 kportableobjectsender.cpp \
 krosterwidget.cpp \
 kxmppclient.cpp \
@@ -65,7 +64,6 @@ kmucmanager.cpp \
 kmucroombackend.cpp
 
 !android: HEADERS += \
-kloginwidget.h \
 kportableobjectsender.h \
 krosterwidget.h \
 kxmppclient.h \

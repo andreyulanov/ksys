@@ -166,7 +166,6 @@ Item {
                                 text: "Add"
                                 onClicked: {
                                     _mucBackEnd.add();
-                                    console.log("_mucBackend.roomJid: " + _mucBackEnd.room_jid)
                                 }
                             }
                             Button {
@@ -205,6 +204,7 @@ Item {
                         // time: qsTr("")
 
                         onClicked: {
+                            console.log("Clicked room", model.jid);
                             view.currentIndex = model.index
                         }
                     }

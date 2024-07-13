@@ -22,6 +22,7 @@ public:
                 AddingReaction _adding_reaction = IgnoreAdding);
     void setInvitationReaction(InvitationReaction);
     void setAddingReaction(AddingReaction);
+    //void discoveryRoomInfo(const QString& jid);
     /// Searches through the jids of added rooms.
     ///
     /// \return nullptr means no room has been found.
