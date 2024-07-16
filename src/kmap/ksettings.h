@@ -27,15 +27,37 @@
 /// \endcode
 class KSettings : public QObject
 {
+    Q_OBJECT
+    Q_PROPERTY(QString jid READ jid WRITE setJid NOTIFY jidChanged)
+    Q_PROPERTY(QString password READ password WRITE setPassword NOTIFY passwordChanged)
+    Q_PROPERTY(bool thereIsASavedAccount READ thereIsASavedAccount NOTIFY savedAccountPresenceChanged)
+    Q_PROPERTY(bool autologin READ autologin WRITE setAutologin NOTIFY autologinChanged)
+
 public:
-    explicit KSettings(QObject *parent = nullptr);
+    KSettings(QObject *parent = nullptr);
     QString jid();
     QString password();
-    void saveJid(QString);
-    void savePassword(QString);
-    void saveAccount(QString, QString);
+    bool thereIsASavedAccount();
+    bool autologin();
+    void setJid(QString);
+    void setPassword(QString);
+    void setAutologin(bool);
+    Q_INVOKABLE void saveAccount(QString jid, QString password);
+
+signals:
+    void jidChanged();
+    void passwordChanged();
+    void savedAccountPresenceChanged();
+    void autologinChanged();
+
 private:
     QSettings q_settings;
+    void saveJid(QString);
+    void savePassword(QString);
+    void saveAutologin(bool);
+    inline static const QString login_path = "account/jid";
+    inline static const QString password_path = "account/password";
+    inline static const QString autologin_path = "autologin";
 };
 
 #endif // KSETTINGS_H

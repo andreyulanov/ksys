@@ -242,6 +242,7 @@ Item {
 
     function onConnected() {
         logInFlag = true;
+        popupLogIn.saveAccount();
         popupLogIn.close();
     }
 

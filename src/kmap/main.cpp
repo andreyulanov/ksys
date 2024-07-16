@@ -353,8 +353,6 @@ int main(int argc, char* argv[])
                                   "/client.log");
   client.logger()->setLoggingType(QXmppLogger::FileLogging);
 
-  KSettings k_settings;
-
   // some database stuff
   QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
   db.setDatabaseName(storage_man.databasePath());
@@ -390,9 +388,18 @@ int main(int argc, char* argv[])
   QObject::connect(root_item, SIGNAL(connectToServer(QString, QString)),
                    &client, SLOT(reconnectToServer(QString, QString)));
 
-  view.engine()->rootContext()->setContextProperty("kClient",&client);
-  view.engine()->rootContext()->setContextProperty("_mucRoomsModel", &muc_rooms_model);
-  view.engine()->rootContext()->setContextProperty("_mucBackEnd", &muc_controller);
+  QQmlContext* root_context = view.engine()->rootContext();
+  root_context->setContextProperty("kClient",&client);
+  root_context->setContextProperty("_mucRoomsModel", &muc_rooms_model);
+  root_context->setContextProperty("_mucBackEnd", &muc_controller);
+
+  KSettings k_settings;
+  root_context->setContextProperty("_kSettings", &k_settings);
+
+  if (k_settings.autologin() && k_settings.thereIsASavedAccount())
+  {
+    client.reconnectToServer(k_settings.jid(), k_settings.password());
+  }
 
   view.show();
 

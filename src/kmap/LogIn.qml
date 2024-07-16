@@ -13,7 +13,7 @@ Popup {
     }
 
     Rectangle {
-        id: passwordTextFild
+        id: passwordTextField
 
         width: 300
         height: 50
@@ -26,7 +26,7 @@ Popup {
         property bool showPass : false
 
         TextField {
-            id: passwordTextFildin
+            id: passwordTextFieldin
 
             width: parent.width - parent.height
             height: parent.height
@@ -36,7 +36,7 @@ Popup {
 
             placeholderText: "Password"
 
-            echoMode:passwordTextFild.showPass ? TextInput.Normal : TextInput.Password
+            echoMode:passwordTextField.showPass ? TextInput.Normal : TextInput.Password
 
             background: Rectangle {
                 radius: parent.height/5
@@ -44,7 +44,7 @@ Popup {
                 border.color: "transparent"
             }
 
-            text: qsTr("very-secure-password-for-knav-alice")
+            text: _kSettings.password;
         }
 
         CircleButton {
@@ -55,37 +55,45 @@ Popup {
             anchors.right: parent.right
             anchors.top: parent.top
 
-            imageSource: passwordTextFild.showPass ? "/labels/eye.png" : "/labels/hide.png"
+            imageSource: passwordTextField.showPass ? "/labels/eye.png" : "/labels/hide.png"
 
             onClicked: {
-                passwordTextFild.showPass = !passwordTextFild.showPass
+                passwordTextField.showPass = !passwordTextField.showPass
             }
         }
     }
 
 
     FancyTextField {
-        id: emailTextFild
+        id: jidTextField
 
-        width: passwordTextFild.width
-        height: passwordTextFild.height
-        anchors.bottom: passwordTextFild.top
-        anchors.horizontalCenter: passwordTextFild.horizontalCenter
+        width: passwordTextField.width
+        height: passwordTextField.height
+        anchors.bottom: passwordTextField.top
+        anchors.horizontalCenter: passwordTextField.horizontalCenter
         anchors.margins: 30
 
         borderColor: root.logInError ? "red" : "black"
 
-        placeholderText: "Email"
+        placeholderText: "jid"
 
-        text: qsTr("knav.alice@macaw.me")
+        text: _kSettings.jid
+    }
+
+    CheckBox {
+        text: qsTr("Automatic login on startup")
+        checked: _kSettings.autologin
+        onCheckedChanged: {
+            _kSettings.autologin = checked;
+        }
     }
 
 
     Item {
-        width: passwordTextFild.width
-        height: passwordTextFild.height
-        anchors.top: passwordTextFild.bottom
-        anchors.horizontalCenter: passwordTextFild.horizontalCenter
+        width: passwordTextField.width
+        height: passwordTextField.height
+        anchors.top: passwordTextField.bottom
+        anchors.horizontalCenter: passwordTextField.horizontalCenter
         anchors.margins: 30
 
         FancyButton {
@@ -98,7 +106,7 @@ Popup {
             text: qsTr("OK")
 
             onClicked: {
-                root.connectToServer(emailTextFild.text, passwordTextFildin.text);
+                root.connectToServer(jidTextField.text, passwordTextFieldin.text);
                 // mainWindow.logInFlag = true;
                 // popupLogIn.close();
             }
@@ -115,5 +123,8 @@ Popup {
 
             onClicked: popupLogIn.close()
         }
+    }
+    function saveAccount(){
+        _kSettings.saveAccount(jidTextField.text, passwordTextFieldin.text);
     }
 }
