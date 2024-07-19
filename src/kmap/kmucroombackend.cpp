@@ -40,13 +40,11 @@ void KMucRoomsController::add()
 
 KMucRoomsModel::KMucRoomsModel(QXmppMucManager* manager,
                                KMucRoomsController* controller,
-                               QSqlDatabase* database,
                                QObject *parent):
-    QAbstractListModel(parent)
+    KAbstractDbListModel(parent)
 {
     setManager(manager);
     setController(controller);
-    setDatabase(database);
 }
 
 int KMucRoomsModel::rowCount(const QModelIndex&) const
@@ -94,29 +92,7 @@ void KMucRoomsModel::setManager(QXmppMucManager* _manager)
 {
     manager = _manager;
 }
-void KMucRoomsModel::setDatabase(QSqlDatabase* _database)
-{
-    if (_database == nullptr)
-    {
-        qWarning() << "KMucRoomsModel: database points to null";
-        database = nullptr;
-        return;
-    }
-    database = _database;
-    if (!database->isOpen())
-        database->open();
-    if (database->isOpenError())
-    {
-        qCritical() << "KMucRoomsModel: database openned with error:"
-                    << database->lastError().text();
-        database = nullptr;
-    }
-    else
-    {
-        createTable();
-        loadFromDatabase();
-    }
-}
+
 void KMucRoomsModel::setController(KMucRoomsController* controller)
 {
     if (controller == nullptr) return;
@@ -146,7 +122,7 @@ QXmppMucRoom* KMucRoomsModel::createRoom(const QString& room_jid)
 }
 bool KMucRoomsModel::insertRoomToDatabase(QXmppMucRoom* room)
 {
-    if (noDatabaseMode()) return true;
+    if (noDatabaseMode()) return false;
     QSqlQuery query(*database);
     query.prepare("INSERT INTO " + table_name + "(jid, nickname, password)"
                   "VALUES (:jid, :nickname, :password)");
@@ -164,7 +140,7 @@ bool KMucRoomsModel::insertRoomToDatabase(QXmppMucRoom* room)
 
 bool KMucRoomsModel::updateRoomInDatabase(QXmppMucRoom* room)
 {
-    if (noDatabaseMode()) return true;
+    if (noDatabaseMode()) return false;
     QSqlQuery query(*database);
     query.prepare("UPDATE" + table_name + "nickname = :nickname," +
                                           "password = :password)" +
@@ -188,7 +164,7 @@ QXmppMucRoom* KMucRoomsModel::roomAddedSlot(const QString& room_jid)
     {
         int row = rowCount(QModelIndex()) - 1;
         beginRemoveRows(QModelIndex(), row, row);
-        destryRoom(room);
+        destroyRoom(room);
         endRemoveRows();
         return nullptr;
     }
@@ -197,6 +173,7 @@ QXmppMucRoom* KMucRoomsModel::roomAddedSlot(const QString& room_jid)
 
 bool KMucRoomsModel::loadFromDatabase()
 {
+    qDebug() << "Loading MUC Rooms table";
     if (noDatabaseMode()) return false;
     qDebug() << "Going to load MUC rooms from database";
     QSqlQuery query(*database);
@@ -208,7 +185,7 @@ bool KMucRoomsModel::loadFromDatabase()
     }
     while (query.next())
     {
-        qDebug() << "From database loaded room:" << query.value(0).toString();
+        qDebug() << "Room loaded from the database :" << query.value(0).toString();
         QXmppMucRoom* room = createRoom(query.value(0).toString());
         if (!query.value(1).isNull()) room->setNickName(query.value(1).toString());
         if (!query.value(2).isNull()) room->setPassword(query.value(2).toString());
@@ -218,6 +195,7 @@ bool KMucRoomsModel::loadFromDatabase()
 
 bool KMucRoomsModel::createTable()
 {
+    qDebug() << "Creating MUC Rooms table";
     if (noDatabaseMode()) return false;
     QSqlQuery query(*database);
     query.prepare("CREATE TABLE IF NOT EXISTS\"" + table_name + "\" ("
@@ -228,7 +206,7 @@ bool KMucRoomsModel::createTable()
     ")");
     if (!query.exec())
     {
-        qCritical() << "Unable to save MUC room:" << query.lastError().text();
+        qCritical() << "Unable to create MUC rooms table:" << query.lastError().text();
         return false;
     }
     return true;
@@ -237,10 +215,10 @@ bool KMucRoomsModel::createTable()
 bool KMucRoomsModel::removeRoom(QXmppMucRoom* room)
 {
     // The laziness of && is used here.
-   return removeRoomFromDatabase(room) && destryRoom(room);
+   return removeRoomFromDatabase(room) && destroyRoom(room);
 }
 
-bool KMucRoomsModel::destryRoom(QXmppMucRoom* room)
+bool KMucRoomsModel::destroyRoom(QXmppMucRoom* room)
 {
     if (room->isJoined()) room->leave();
     int index = roomIndex(room);
@@ -256,7 +234,7 @@ bool KMucRoomsModel::destryRoom(QXmppMucRoom* room)
 
 bool KMucRoomsModel::removeRoomFromDatabase(QXmppMucRoom* room)
 {
-    if (noDatabaseMode()) return true;
+    if (noDatabaseMode()) return false;
     QSqlQuery query(*database);
     query.prepare("DELETE FROM MUC_rooms WHERE jid = :jid;");
     query.bindValue(":jid", room->jid());

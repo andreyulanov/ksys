@@ -20,6 +20,7 @@ SOURCES += \
  ../lib/kpack.cpp \
 ../lib/krender.cpp \
  ../lib/krenderpack.cpp \
+    kabstractdblistmodel.cpp \
  kautoscroll.cpp \
  kcontrols.cpp \
  keditwidget.cpp \
@@ -44,6 +45,7 @@ HEADERS += \
  ../lib/kpack.h \
 ../lib/krender.h \
  ../lib/krenderpack.h \
+    kabstractdblistmodel.h \
  kautoscroll.h \
  kcontrols.h \
  keditwidget.h \

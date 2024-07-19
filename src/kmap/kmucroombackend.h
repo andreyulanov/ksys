@@ -3,11 +3,12 @@
 
 #include <QObject>
 #include <QString>
-#include <QAbstractListModel>
 #include <QtQml/qqml.h>
 #include <QXmppQt5/QXmppMucManager.h>
 #include <QRegularExpression>
 #include <QtSql/QSqlDatabase>
+
+#include "kabstractdblistmodel.h"
 
 /// \brief Contorller of MUC rooms.
 class KMucRoomsController : public QObject
@@ -40,7 +41,7 @@ private:
 /// \brief Model that contains chat rooms.
 ///
 /// TODO: Model stores room pointers inside itself, but there
-class KMucRoomsModel : public QAbstractListModel
+class KMucRoomsModel : public KAbstractDbListModel
 {
     Q_OBJECT
 
@@ -56,7 +57,6 @@ public:
     /// _manager and _databse must be ready for work
     KMucRoomsModel(QXmppMucManager* _manager,
                    KMucRoomsController* _controller = nullptr,
-                   QSqlDatabase* _database = nullptr,
                    QObject *parent = nullptr);
 
     virtual int rowCount(const QModelIndex&) const;
@@ -65,12 +65,6 @@ public:
     virtual QHash<int, QByteArray> roleNames() const;
 
     void setManager(QXmppMucManager* _manager);
-    /// Sets the databse.
-    ///
-    ///	Database mast be ready for openning.
-    /// If database == nullptr or database can not be opened
-    ///  couthen the model will not store data in a database.
-    void setDatabase(QSqlDatabase*);
     /// Sets the controller.
     ///
     /// Actually this function only do signal-slot connection.
@@ -79,15 +73,11 @@ public:
     bool loadFromDatabase();
     /// Create table of chats in the database.
     bool createTable();
-    /// \brief Shows if the no database mode on.
-    /// \returns true if works without database, false otherwise
-    bool noDatabaseMode() const {return database == nullptr;}
 private:
     QXmppMucManager* manager = nullptr;
     /// if database == nullptr then the model will not store data in a database
-    QSqlDatabase* database = nullptr;
     QVector<QXmppMucRoom*> rooms;
-    const QString table_name = "MUC_rooms";
+    inline static const QString table_name = "MUC_rooms";
 
     /// Leave the room and remove it from the database
     bool removeRoom(QXmppMucRoom*);
@@ -97,7 +87,7 @@ private:
     // Create a new room but do not save it to the database.
     QXmppMucRoom* createRoom(const QString& room_jid);
     // destry a room but do not remove it from the database.
-    bool destryRoom(QXmppMucRoom* room);
+    bool destroyRoom(QXmppMucRoom* room);
     // Insert a new room to the database.
     bool insertRoomToDatabase(QXmppMucRoom* room);
     // Update existing room in the database.
