@@ -17,7 +17,7 @@ public:
     ///  couthen the model will not store data in a database.
     /// The class is usless untill you have set the database.
     void setDatabase(QSqlDatabase*);
-    bool noDatabaseMode() const {return database == nullptr;}
+    bool noDatabaseMode() const {return (database == nullptr);}
 
 protected:
     /// Loads chats from database and adds them to the manager.

@@ -27,11 +27,13 @@
 #ifdef BUILD_WITH_XMPP
   #include "kmucroombackend.h"
   #include "kxmppclient.h"
+  #include "kmessagemodel.h"
 //  #include "krosterwidget.h"
   #include <kportableobjectsender.h>
   #include <QXmppQt5/QXmppClient.h>
   #include <QXmppQt5/QXmppLogger.h>
   #include <QXmppQt5/QXmppRosterManager.h>
+  #include <QXmppQt5/QXmppMamManager.h>
 #endif
 
 #ifdef BUILD_WITH_SENSORS
@@ -400,6 +402,14 @@ int main(int argc, char* argv[])
   {
     client.reconnectToServer(k_settings.jid(), k_settings.password());
   }
+
+  //Message archive (MAM and database)
+
+  //QXmppMamManager mam_manager;
+  //client.addExtension(&mam_manager);
+
+  KMessageModel message_model(&client);
+  message_model.setDatabase(&db);
 
   view.show();
 
