@@ -62,83 +62,20 @@ void KMessageModel::MessageFiller::setMessage(QXmppMessage *newMessage)
 
 QString KMessageModel::MessageFiller::field2Name(Field field)
 {
-    switch (field) {
-        case Body:      return "body";
-        case E2eeFallbackBody:  return "e2eeFallbackBody";
-        case Subject:   return "subject";
-        case Thread:    return "thread";
-        case ParentThread:      return "parentThread";
-        case Type:      return "type";
-        case OutOfBandUrl:      return "outOfBandUrl";
-        case Xhtml:     return "xhtml";
-        case Stamp:     return "stamp";
-        case ReceiptRequested:  return "receiptRequested";
-        case ReceiptId: return "receiptId";
-        case AttentionRequested:        return "attentionRequested";
-        case MucInvitationJid:  return "mucInvitationJid";
-        case MucInvitationPassword:     return "mucInvitationPassword";
-        case MucInvitationReason:       return "mucInvitationReason";
-        case Private:   return "private";
-        case CarbonForwarded:   return "carbonForwarded";
-        case ReplaceId: return "replaceId";
-        case Markable:  return "markable";
-        case MarkerId:  return "markerId";
-        case MarkedThread:      return "markedThread";
-        case Marker:    return "marker";
-        case StanzaId:  return "stanzaId";
-        case StanzaIdBy:        return "stanzaIdBy";
-        case OriginId:  return "originId";
-        case AttachId:  return "attachId";
-        case MixUserJid:        return "mixUserJid";
-        case MixUserNick:       return "mixUserNick";
-        case EncryptionMethod:  return "encryptionMethod";
-        case EncryptionMethodNs:        return "encryptionMethodNs";
-        case EncryptionName:    return "encryptionName";
-        case IsSpoiler: return "isSpoiler";
-        case SpoilerHint:       return "spoilerHint";
-        case IsFallback:        return "isFallback";
-    default: //impossible
-        qWarning() << "Unknown field";
-        return QString();
+    if (field_2_name_map.contains(field))
+    {
+        return field_2_name_map.value(field);
     }
+    qWarning() << "Unknown field name" << field;
+    return QString();
 }
 
 KMessageModel::MessageFiller::Field KMessageModel::MessageFiller::name2Field(const QString& name)
 {
-    if (name == "body") return Body;
-    if (name == "e2eeFallbackBody") return E2eeFallbackBody;
-    if (name == "subject") return Subject;
-    if (name == "thread") return Thread;
-    if (name == "parentThread") return ParentThread;
-    if (name == "type") return Type;
-    if (name == "outOfBandUrl") return OutOfBandUrl;
-    if (name == "xhtml") return Xhtml;
-    if (name == "stamp") return Stamp;
-    if (name == "receiptRequested") return ReceiptRequested;
-    if (name == "receiptId") return ReceiptId;
-    if (name == "attentionRequested") return AttentionRequested;
-    if (name == "mucInvitationJid") return MucInvitationJid;
-    if (name == "mucInvitationPassword") return MucInvitationPassword;
-    if (name == "mucInvitationReason") return MucInvitationReason;
-    if (name == "private") return Private;
-    if (name == "carbonForwarded") return CarbonForwarded;
-    if (name == "replaceId") return ReplaceId;
-    if (name == "markable") return Markable;
-    if (name == "markerId") return MarkerId;
-    if (name == "markedThread") return MarkedThread;
-    if (name == "marker") return Marker;
-    if (name == "stanzaId") return StanzaId;
-    if (name == "stanzaIdBy") return StanzaIdBy;
-    if (name == "originId") return OriginId;
-    if (name == "attachId") return AttachId;
-    if (name == "mixUserJid") return MixUserJid;
-    if (name == "mixUserNick") return MixUserNick;
-    if (name == "encryptionMethod") return EncryptionMethod;
-    if (name == "encryptionMethodNs") return EncryptionMethodNs;
-    if (name == "encryptionName") return EncryptionName;
-    if (name == "isSpoiler") return IsSpoiler;
-    if (name == "spoilerHint") return SpoilerHint;
-    if (name == "isFallback") return IsFallback;
+    if (name_2_field_map.contains(name))
+    {
+        return name_2_field_map.value(name);
+    }
     qWarning() << "Unknown field name" << name;
     return Invalid;
 }
