@@ -199,8 +199,8 @@ Item {
                         anchors.margins: 2
                         anchors.fill: parent
 
-                        name: "%1 (%2)".arg(model.name).arg(model.jid)
-                        lastMessage: "%1".arg(model.subject)
+                        name: model.mucRoom.jid
+                        lastMessage: model.mucRoom.subject
                         // time: qsTr("")
 
                         onClicked: {

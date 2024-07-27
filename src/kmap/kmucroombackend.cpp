@@ -1,6 +1,7 @@
 #include "kmucroombackend.h"
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QVariant>
 
 KMucRoomsController::KMucRoomsController(QObject *parent)
     : QObject{parent}
@@ -66,12 +67,12 @@ QVariant KMucRoomsModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
     switch (role) {
-    case NameRole:
-        return room->name();
-    case JidRole:
-        return room->jid();
-    case SubjectRole:
-        return room->subject();
+    case MucRoomRole:
+    {
+        QVariant result;
+        result.setValue(room);
+        return result;
+    }
     default:
         qWarning() << "KMucRoomsModel::data: Invalid role";
         return QVariant();
@@ -81,9 +82,7 @@ QVariant KMucRoomsModel::data(const QModelIndex &index, int role) const
 QHash<int, QByteArray> KMucRoomsModel::roleNames() const
 {
     QHash<int, QByteArray> roles = QAbstractListModel::roleNames();
-    roles[JidRole] = "jid";
-    roles[NameRole] = "name";
-    roles[SubjectRole] = "subject";
+    roles[MucRoomRole] = "mucRoom";
 
     return roles;
 }
@@ -226,7 +225,7 @@ bool KMucRoomsModel::destroyRoom(QXmppMucRoom* room)
     else
     {
         qWarning() << "Can't find the room to remove in the rooms vector.\n"
-        << "I'll destry it antyway, but it's clear that something have gone wrong...";
+        << "I'll destroy it anyway, but it's clear that something have gone wrong...";
     }
     //room->deleteLater();
     return true;

@@ -7,6 +7,7 @@
 #include <QXmppQt5/QXmppMucManager.h>
 #include <QRegularExpression>
 #include <QtSql/QSqlDatabase>
+#include <QMetaType>
 
 #include "kabstractdblistmodel.h"
 
@@ -47,9 +48,7 @@ class KMucRoomsModel : public KAbstractDbListModel
 
 public:
     enum Roles {
-        JidRole = Qt::UserRole + 1,
-        NameRole,
-        SubjectRole
+        MucRoomRole = Qt::UserRole + 1,
     };
 
     /// \brief Constructs a new KMucRoomsModel.
