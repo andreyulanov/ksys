@@ -204,7 +204,7 @@ Item {
                         // time: qsTr("")
 
                         onClicked: {
-                            console.log("Clicked room", model.jid);
+                            console.log("Clicked room", model.mucRoom.jid);
                             view.currentIndex = model.index
                         }
                     }

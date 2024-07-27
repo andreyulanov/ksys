@@ -163,7 +163,7 @@ QXmppMucRoom* KMucRoomsModel::roomAddedSlot(const QString& room_jid)
     {
         int row = rowCount(QModelIndex()) - 1;
         beginRemoveRows(QModelIndex(), row, row);
-        destroyRoom(room);
+        removeRows(row,1);
         endRemoveRows();
         return nullptr;
     }
@@ -174,7 +174,6 @@ bool KMucRoomsModel::loadFromDatabase()
 {
     qDebug() << "Loading MUC Rooms table";
     if (noDatabaseMode()) return false;
-    qDebug() << "Going to load MUC rooms from database";
     QSqlQuery query(*database);
     query.exec("SELECT jid, nickname, password from " + table_name);
     if (query.lastError().isValid())
@@ -211,29 +210,10 @@ bool KMucRoomsModel::createTable()
     return true;
 }
 
-bool KMucRoomsModel::removeRoom(QXmppMucRoom* room)
-{
-    // The laziness of && is used here.
-   return removeRoomFromDatabase(room) && destroyRoom(room);
-}
-
-bool KMucRoomsModel::destroyRoom(QXmppMucRoom* room)
-{
-    if (room->isJoined()) room->leave();
-    int index = roomIndex(room);
-    if (index > -1) rooms.remove(index);
-    else
-    {
-        qWarning() << "Can't find the room to remove in the rooms vector.\n"
-        << "I'll destroy it anyway, but it's clear that something have gone wrong...";
-    }
-    //room->deleteLater();
-    return true;
-}
-
 bool KMucRoomsModel::removeRoomFromDatabase(QXmppMucRoom* room)
 {
-    if (noDatabaseMode()) return false;
+    qDebug() << "Removing room" << room->jid() << "from database";
+    if (noDatabaseMode()) return true;
     QSqlQuery query(*database);
     query.prepare("DELETE FROM MUC_rooms WHERE jid = :jid;");
     query.bindValue(":jid", room->jid());
@@ -247,8 +227,9 @@ bool KMucRoomsModel::removeRoomFromDatabase(QXmppMucRoom* room)
 
 bool KMucRoomsModel::removeRows(int row, int count, const QModelIndex &parent)
 {
-    beginRemoveRows(parent, row, row + count - 1);
-    if (row < 0 || row + count > rowCount(parent))
+    int last_row = row + count - 1;
+    beginRemoveRows(parent, row, last_row);
+    if (row < 0 || last_row  >= rowCount(parent))
     {
         qWarning() << "KMucRoomsModel::removeRows: index out of range." << Qt::endl
                    << "It tries to remove" << count << "rows from" << row << Qt::endl
@@ -256,12 +237,24 @@ bool KMucRoomsModel::removeRows(int row, int count, const QModelIndex &parent)
         endRemoveRows();
         return false;
     }
-    QList<QXmppMucRoom*> rooms_to_remove = manager->rooms().mid(row, count);
     bool result = true;
-    for (int i = 0; i < rooms_to_remove.size(); i++)
+    QXmppMucRoom* room_to_remove = nullptr;
+    for (int i = row; i <= last_row; i++)
     {
-        result &= removeRoom(rooms_to_remove.at(i));
+        room_to_remove = roomByIndex(index(i));
+        if (room_to_remove == nullptr)
+        {
+            qWarning() << "Something went wrong, trying to remove nullptr muc room";
+            result = false;
+            break;
+        }
+        else
+        {
+            result &= removeRoomFromDatabase(room_to_remove);
+            if (room_to_remove->isJoined()) room_to_remove->leave();
+        }
     }
+    rooms.remove(row,count);
     endRemoveRows();
     return result;
 }
@@ -282,8 +275,8 @@ void KMucRoomsModel::updateRoomSlot()
     QXmppMucRoom* room = (QXmppMucRoom *) sender();
     qDebug() << "Updating room" << room->jid();
     updateRoomInDatabase(room);
-    QModelIndex indx =  index(roomIndex(room), 0);
-    //TODO: I emmit signal without vectore of changed roles.
+    QModelIndex indx =  index(roomIndex(room));
+    //TODO: I emmit signal without vector of changed roles.
     // It cause all roles to be updated.
     dataChanged(indx, indx);
 }

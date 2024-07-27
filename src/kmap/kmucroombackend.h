@@ -78,8 +78,6 @@ private:
     QVector<QXmppMucRoom*> rooms;
     inline static const QString table_name = "MUC_rooms";
 
-    /// Leave the room and remove it from the database
-    bool removeRoom(QXmppMucRoom*);
     /// Returns room's index in the rooms vetor, O(n)
     int roomIndex(QXmppMucRoom* room);
     QXmppMucRoom* roomByIndex(const QModelIndex &index) const;
