@@ -28,6 +28,8 @@
   #include "kmucroombackend.h"
   #include "kxmppclient.h"
   #include "kmessagemodel.h"
+  #include "kfilesmodel.h"
+  #include "kmessagefileconnectionmodel.h"
 //  #include "krosterwidget.h"
   #include <kportableobjectsender.h>
   #include <QXmppQt5/QXmppClient.h>
@@ -410,6 +412,12 @@ int main(int argc, char* argv[])
 
   KMessageModel message_model(&client);
   message_model.setDatabase(&db);
+
+  KFilesModel files_model;
+  files_model.setDatabase(&db);
+
+  KMessageFileConnectionModel message_file_connection_model;
+  message_file_connection_model.setDatabase(&db);
 
   view.show();
 

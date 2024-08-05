@@ -1,7 +1,8 @@
-#include "kmessagemodel.h"
 #include <QXmppQt5/QXmppMessage.h>
 #include <QSqlQuery>
 #include <QSqlError>
+#include "kmessagemodel.h"
+#include "kfilesmodel.h"
 
 QSqlQuery KMessageModel::message2InsertQuery(const QXmppMessage &message)
 {
@@ -9,6 +10,11 @@ QSqlQuery KMessageModel::message2InsertQuery(const QXmppMessage &message)
     query.prepare("INSERT INTO " + table_name + columns_values);
     bindValues(query, message);
     return query;
+}
+
+int KMessageModel::index2dbId(const QModelIndex &index) const
+{
+    return index.row(); /// I expect that id is index.ros() \todo fix it
 }
 
 void KMessageModel::bindValues(QSqlQuery& query, const QXmppMessage& message) const
@@ -245,16 +251,42 @@ QVariant KMessageModel::data(const QModelIndex& index, int role) const
     QVariant result;
     switch (role) {
     case fromRole:
-        result = QVariant(message->from());
+        result = QVariant(message->from()); break;
     case toRole:
-        result = QVariant(message->to());
+        result = QVariant(message->to()); break;
     case bodyRole:
-        result = QVariant(message->body());
+        result = QVariant(message->body()); break;
+    case filesDataRole:
+        result = QVariant(getFilesData(index2dbId(index))); break;
     default:
         qWarning() << "KMessageModel::data: Invalid role";
         result = QVariant();
     }
     delete message;
+    return result;
+}
+
+QList<QVariant> KMessageModel::getFilesData(int id) const
+{
+    QList<QVariant> result;
+    if (noDatabaseMode()) return result;
+    QSqlQuery query(*database);
+    query.prepare("SELECT data FROM files WHERE files.id In "
+                  "(SELECT file_id FROM files_messages_connections WHERE message_id = :id)");
+    query.bindValue(":id", id);
+    if (!query.exec())
+    {
+        qCritical() << "Can't get data:" << query.lastError().text();
+        return result;
+    }
+    while(query.next())
+    {
+
+        if (query.value("data").isValid() && query.value("data").canConvert<QByteArray>())
+            result.append(QVariant(query.value("data").value<QByteArray>()));
+        else
+            qCritical() << "Something wrong with data...";
+    }
     return result;
 }
 
@@ -273,9 +305,10 @@ int KMessageModel::rowCount(const QModelIndex&) const
 QHash<int, QByteArray> KMessageModel::roleNames() const
 {
     QHash<int, QByteArray> roles = QAbstractListModel::roleNames();
-    roles[fromRole]	= "from";
-    roles[toRole] 	= "to";
-    roles[bodyRole]	= "body";
+    roles[fromRole]			= "from";
+    roles[toRole] 			= "to";
+    roles[bodyRole]			= "body";
+    roles[filesDataRole]	= "filesData";
     //TODO add more roles
     return roles;
 }
@@ -364,7 +397,7 @@ QXmppMessage* KMessageModel::getMessageByIndex(const QModelIndex& index) const
 {
     if (!index.isValid()) return nullptr;
     QSqlQuery query(*database);
-    int dbId = index.row();
+    int dbId = index2dbId(index);
     query.prepare("SELECT * FROM" + table_name +
                   "WHERE dbId = :dbId");
     query.bindValue(":dbId",dbId);

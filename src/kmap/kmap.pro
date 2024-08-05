@@ -20,6 +20,8 @@ SOURCES += \
  ../lib/kpack.cpp \
 ../lib/krender.cpp \
  ../lib/krenderpack.cpp \
+    kfilesmodel.cpp \
+    kmessagefileconnectionmodel.cpp \
     kmessagemodel.cpp \
     kabstractdblistmodel.cpp \
  kautoscroll.cpp \
@@ -46,6 +48,8 @@ HEADERS += \
  ../lib/kpack.h \
 ../lib/krender.h \
  ../lib/krenderpack.h \
+    kfilesmodel.h \
+    kmessagefileconnectionmodel.h \
     kmessagemodel.h \
     kabstractdblistmodel.h \
  kautoscroll.h \

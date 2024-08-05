@@ -6,6 +6,9 @@
 #include <QXmppQt5/QXmppClient.h>
 #include <QtSql/QSqlDatabase>
 #include "kabstractdblistmodel.h"
+#include "kfilesmodel.h"
+
+class KMessageFileConnectionModel;
 
 class KMessageModel : public KAbstractDbListModel
 {
@@ -16,7 +19,8 @@ public:
     enum Roles {
         fromRole = Qt::UserRole + 1,
         toRole,
-        bodyRole
+        bodyRole,
+        filesDataRole
     };
 
     virtual int rowCount(const QModelIndex&) const override;
@@ -25,7 +29,7 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const override;
     virtual QHash<int, QByteArray> roleNames() const override;
 
-       /// Sets the client.
+    /// Sets the client.
     void setClient(QXmppClient*);
 public slots:
     bool addMessage(const QXmppMessage&);
@@ -33,11 +37,15 @@ public slots:
 protected:
     virtual bool loadFromDatabase() override;
     virtual bool createTable() override;
+    bool createConnectionsTable();
+    bool noFilesMode();
 
 private:
     QXmppClient* client = nullptr;
+    static const inline QString table_name = "messages";
+
     void bindValues(QSqlQuery& query, const QXmppMessage& message) const;
-    inline static const QString table_name = "messages";
+    QList<QVariant> getFilesData(int id) const;
     /// Gets message by index.
     ///
     /// \todo refactor pointers to std_optional
@@ -48,6 +56,7 @@ private:
     QXmppMessage query2Message(const QSqlQuery&) const;
     /// Creates SQL qery to insert a message.
     QSqlQuery message2InsertQuery(const QXmppMessage&);
+    int index2dbId(const QModelIndex&) const;
     inline static const QString columns_values = "("
                    "body,"
                    "e2eeFallbackBody,"
@@ -170,7 +179,6 @@ private:
         // T get(Field);
         QXmppMessage *getMessage() const;
         void setMessage(QXmppMessage *newMessage);
-        inline static const QString table_name = "messages";
         inline static const QMap<Field, QString> field_2_name_map{
             {Body,                  "body"},
             {E2eeFallbackBody,      "e2eeFallbackBody"},
@@ -244,6 +252,7 @@ private:
             {"isFallback",					 IsFallback},
         };
     };
+    friend KMessageFileConnectionModel;
 };
 
 #endif // KMESSAGEMODEL_H
